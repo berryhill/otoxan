@@ -38,11 +38,11 @@ jobs:
         run: go build ./...
 
       - name: Test (short, race)
-        run: go test ./... -short -race -count=1 -timeout 15m
+        run: go test ./... -short -race -count=1 -timeout 15m -tags '!parity'
         env:
           TESTCONTAINERS_RYUK_DISABLED: "true"
 
       - name: Test (full, no race)
-        run: go test ./... -count=1 -timeout 15m
+        run: go test ./... -count=1 -timeout 15m -tags 'full parity'
         env:
           TESTCONTAINERS_RYUK_DISABLED: "true"

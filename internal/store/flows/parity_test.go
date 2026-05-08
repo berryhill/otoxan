@@ -1,3 +1,6 @@
+//go:build full || parity
+// +build full parity
+
 package flows
 
 import (

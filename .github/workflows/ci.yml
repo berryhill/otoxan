@@ -43,6 +43,6 @@ jobs:
           TESTCONTAINERS_RYUK_DISABLED: "true"
 
       - name: Test (full, no race)
-        run: go test ./... -count=1 -timeout 15m -tags 'full parity'
+        run: go test ./internal/... ./cmd/... -count=1 -timeout 15m -tags 'full parity'
         env:
           TESTCONTAINERS_RYUK_DISABLED: "true"

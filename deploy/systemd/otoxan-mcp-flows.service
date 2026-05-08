@@ -1,0 +1,15 @@
+[Unit]
+Description=Otoxan MCP Flows Server
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=%h/code/otoxan/otoxan/deploy/mcp-stdio-wrapper.sh %h/code/otoxan/otoxan/cmd/otoxan-mcp-flows/otoxan-mcp-flows
+Environment="INFISICAL_TOKEN=%h/.config/otoxan/infisical.token"
+Environment="MONGO_URI=mongodb://localhost:27017/otoxan"
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

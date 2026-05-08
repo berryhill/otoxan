@@ -69,9 +69,15 @@ func InfisicalGet(name string) (string, error) {
 }
 
 // MongoClient returns a connected mongo.Client and the database name.
-// It first checks the MONGO_URI env var, then falls back to InfisicalGet("MONGO_URI").
+// It checks env vars in this order:
+//   1. OTOXAN_MONGO_URI (new prefixed namespace)
+//   2. MONGO_URI (legacy fallback)
+//   3. InfisicalGet("MONGO_URI")
 func MongoClient(ctx context.Context) (*mongo.Client, string, error) {
-	uri := os.Getenv("MONGO_URI")
+	uri := os.Getenv("OTOXAN_MONGO_URI")
+	if uri == "" {
+		uri = os.Getenv("MONGO_URI")
+	}
 	if uri == "" {
 		var err error
 		uri, err = InfisicalGet("MONGO_URI")
@@ -80,7 +86,10 @@ func MongoClient(ctx context.Context) (*mongo.Client, string, error) {
 		}
 	}
 
-	dbName := os.Getenv("MONGO_DB")
+	dbName := os.Getenv("OTOXAN_MONGO_DB")
+	if dbName == "" {
+		dbName = os.Getenv("MONGO_DB")
+	}
 	if dbName == "" {
 		dbName = "otoxan"
 	}

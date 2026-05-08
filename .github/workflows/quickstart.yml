@@ -1,0 +1,106 @@
+name: Quickstart Smoke Test
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  quickstart:
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })' || mongo --eval 'db.adminCommand({ ping: 1 })'"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.0'
+          cache: true
+
+      - name: Build otoxan
+        run: go build -o /tmp/otoxan ./cmd/otoxan
+
+      - name: Wait for MongoDB
+        run: |
+          for i in {1..30}; do
+            if mongosh --host localhost --port 27017 --eval 'db.adminCommand({ ping: 1 })' >/dev/null 2>&1 || \
+               mongo --host localhost --port 27017 --eval 'db.adminCommand({ ping: 1 })' >/dev/null 2>&1; then
+              echo "MongoDB ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "MongoDB not ready after 30s" >&2
+          exit 1
+
+      - name: Run quickstart smoke test
+        env:
+          OTOXAN_HOME: /tmp/otoxan-home
+          OTOXAN_MONGO_URI: mongodb://localhost:27017
+          OTOXAN_MONGO_DB: otoxan_smoke
+          OTOXAN_DEFAULT_AGENT: smoke-agent
+        run: |
+          set -euo pipefail
+
+          mkdir -p "$OTOXAN_HOME"
+          cat > "$OTOXAN_HOME/config.yaml" <<EOF
+          default_agent: smoke-agent
+          mongo_uri: "mongodb://localhost:27017"
+          mongo_db: otoxan_smoke
+          EOF
+
+          echo "[smoke] task list (expect empty)"
+          output=$(/tmp/otoxan task list --agent smoke-agent 2>&1)
+          echo "$output"
+          if echo "$output" | grep -q '\[\]'; then
+            echo "[smoke] empty list ✓"
+          else
+            echo "[smoke] FAIL: expected empty list []" >&2
+            exit 1
+          fi
+
+          echo "[smoke] task create"
+          output=$(/tmp/otoxan task create smoke-001 --title "smoke" --assignee smoke-agent 2>&1)
+          echo "$output"
+          echo "[smoke] create ✓"
+
+          echo "[smoke] task list (expect 1 task)"
+          output=$(/tmp/otoxan task list --agent smoke-agent 2>&1)
+          echo "$output"
+          if echo "$output" | grep -q '\[\]'; then
+            echo "[smoke] FAIL: expected 1 task, got empty" >&2
+            exit 1
+          fi
+          if echo "$output" | grep -q '"task_id":\s*"smoke-001"'; then
+            echo "[smoke] 1 task with smoke-001 ✓"
+          else
+            echo "[smoke] FAIL: expected smoke-001 in list" >&2
+            exit 1
+          fi
+
+          echo "[smoke] task get"
+          output=$(/tmp/otoxan task get smoke-001 2>&1)
+          echo "$output"
+          if echo "$output" | grep -q '"task_id":\s*"smoke-001"'; then
+            echo "[smoke] get ✓"
+          else
+            echo "[smoke] FAIL: expected smoke-001 from get" >&2
+            exit 1
+          fi
+
+          echo "[smoke] ALL CHECKS PASSED ✓"

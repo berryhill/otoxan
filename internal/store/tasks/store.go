@@ -196,7 +196,7 @@ func (s *TaskStore) List(ctx context.Context, opts ListOptions) ([]Task, error) 
 	}
 	defer cur.Close(ctx)
 
-	var tasks []Task
+	tasks := []Task{}
 	if err := cur.All(ctx, &tasks); err != nil {
 		return nil, err
 	}

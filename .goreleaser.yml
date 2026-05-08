@@ -1,0 +1,174 @@
+# .goreleaser.yml — one-command tagged releases for otoxan
+# Usage: goreleaser release --snapshot --clean  (local test)
+#        git tag vX.Y.Z && git push origin vX.Y.Z  (CI trigger)
+
+version: 2
+
+project_name: otoxan
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod verify
+
+builds:
+  # Core CLI
+  - id: otoxan
+    main: ./cmd/otoxan
+    binary: otoxan
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/silas/otoxan/internal/version.Version={{.Version}}
+      - -X github.com/silas/otoxan/internal/version.Commit={{.Commit}}
+      - -X github.com/silas/otoxan/internal/version.Date={{.Date}}
+
+  # MCP worker
+  - id: otoxan-worker
+    main: ./cmd/otoxan-worker
+    binary: otoxan-worker
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/silas/otoxan/internal/version.Version={{.Version}}
+      - -X github.com/silas/otoxan/internal/version.Commit={{.Commit}}
+      - -X github.com/silas/otoxan/internal/version.Date={{.Date}}
+
+  # MCP servers
+  - id: otoxan-mcp-tasks
+    main: ./cmd/otoxan-mcp-tasks
+    binary: otoxan-mcp-tasks
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+  - id: otoxan-mcp-plans
+    main: ./cmd/otoxan-mcp-plans
+    binary: otoxan-mcp-plans
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+  - id: otoxan-mcp-flows
+    main: ./cmd/otoxan-mcp-flows
+    binary: otoxan-mcp-flows
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+  - id: otoxan-mcp-memory
+    main: ./cmd/otoxan-mcp-memory
+    binary: otoxan-mcp-memory
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+  - id: otoxan-mcp-knowledge
+    main: ./cmd/otoxan-mcp-knowledge
+    binary: otoxan-mcp-knowledge
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+  # TODO(DS-4): Add otoxan-dispatch when cmd/otoxan-dispatch lands
+  # - id: otoxan-dispatch
+  #   main: ./cmd/otoxan-dispatch
+  #   binary: otoxan-dispatch
+  #   env:
+  #     - CGO_ENABLED=0
+  #   goos: [linux, darwin, windows]
+  #   goarch: [amd64, arm64]
+  #   ldflags: [-s -w]
+
+archives:
+  - id: tar-gz
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64{{ else }}{{ .Arch }}{{ end }}
+    files:
+      - README.md
+      - LICENSE
+      - CHANGELOG.md
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+changelog:
+  use: github-native
+
+release:
+  github:
+    owner: silas
+    name: otoxan
+  draft: false
+  prerelease: auto
+
+# Disable source archive and SBOM to keep release lean
+source:
+  enabled: false
+
+# No SBOM generation
+

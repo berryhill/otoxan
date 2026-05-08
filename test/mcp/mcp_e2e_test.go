@@ -28,7 +28,7 @@ import (
 
 func projectRoot() string {
 	_, f, _, _ := runtime.Caller(0)
-	return filepath.Join(filepath.Dir(f), "..")
+	return filepath.Join(filepath.Dir(f), "..", "..")
 }
 
 func buildBinaries(t *testing.T) string {

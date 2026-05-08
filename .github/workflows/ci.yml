@@ -23,6 +23,14 @@ jobs:
           go-version: ${{ matrix.go-version }}
           cache: true
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python deps
+        run: pip install pymongo
+
       - name: Go mod verify
         run: go mod verify
 

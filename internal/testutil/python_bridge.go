@@ -57,7 +57,7 @@ func PythonWriteFixture(t *testing.T, store, id string) bson.M {
 	}
 
 	cmd := exec.Command("python3", helper, "--store", store, "--op", "write", "--id", id)
-	cmd.Env = append(os.Environ(), "PYTHONPATH=/home/silas/.hermes/scripts:/home/silas/.hermes/profiles/default/skills")
+	cmd.Env = append(os.Environ(), "PYTHONPATH="+resolvePythonPath())
 	// Inherit MONGO_URI from test environment so Python and Go talk to the same DB
 	if uri := os.Getenv("MONGO_URI"); uri != "" {
 		cmd.Env = append(cmd.Env, "MONGO_URI="+uri)
@@ -99,7 +99,7 @@ func PythonReadFixture(t *testing.T, store, id string) bson.M {
 	}
 
 	cmd := exec.Command("python3", helper, "--store", store, "--op", "read", "--id", id)
-	cmd.Env = append(os.Environ(), "PYTHONPATH=/home/silas/.hermes/scripts:/home/silas/.hermes/profiles/default/skills")
+	cmd.Env = append(os.Environ(), "PYTHONPATH="+resolvePythonPath())
 	// Inherit MONGO_URI from test environment so Python and Go talk to the same DB
 	if uri := os.Getenv("MONGO_URI"); uri != "" {
 		cmd.Env = append(cmd.Env, "MONGO_URI="+uri)
@@ -132,6 +132,24 @@ func PythonReadFixture(t *testing.T, store, id string) bson.M {
 		m[k] = v
 	}
 	return m
+}
+
+// resolvePythonPath returns a PYTHONPATH string for parity tests.
+// It checks $OTOXAN_HOME/scripts and $OTOXAN_HOME/profiles/default/skills,
+// falling back to ~/.local/share/otoxan/... if OTOXAN_HOME is not set.
+func resolvePythonPath() string {
+	home := os.Getenv("OTOXAN_HOME")
+	if home == "" {
+		if xdg := os.Getenv("XDG_DATA_HOME"); xdg != "" {
+			home = filepath.Join(xdg, "otoxan")
+		} else {
+			h, _ := os.UserHomeDir()
+			home = filepath.Join(h, ".local", "share", "otoxan")
+		}
+	}
+	scripts := filepath.Join(home, "scripts")
+	skills := filepath.Join(home, "profiles", "default", "skills")
+	return scripts + string(filepath.ListSeparator) + skills
 }
 
 // MustGetEnv returns the value of an environment variable or fails the test.

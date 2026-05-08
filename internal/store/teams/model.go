@@ -57,15 +57,15 @@ type Member struct {
 
 // Team is the canonical BSON shape for a team document in the global.teams collection.
 type Team struct {
-	TeamID      string    `bson:"team_id" json:"team_id"`
-	Name        string    `bson:"name" json:"name"`
-	DBName      string    `bson:"db_name" json:"db_name"`
-	DirectiveID *string   `bson:"directive_id,omitempty" json:"directive_id,omitempty"`
-	Members     []Member  `bson:"members" json:"members"`
+	TeamID      string                 `bson:"team_id" json:"team_id"`
+	Name        string                 `bson:"name" json:"name"`
+	DBName      string                 `bson:"db_name" json:"db_name"`
+	DirectiveID *string                `bson:"directive_id,omitempty" json:"directive_id,omitempty"`
+	Members     []Member               `bson:"members" json:"members"`
 	Artifacts   map[string]interface{} `bson:"artifacts" json:"artifacts"`
-	Status      TeamStatus `bson:"status" json:"status"`
-	CreatedAt   time.Time `bson:"created_at" json:"created_at"`
-	UpdatedAt   time.Time `bson:"updated_at" json:"updated_at"`
+	Status      TeamStatus             `bson:"status" json:"status"`
+	CreatedAt   time.Time              `bson:"created_at" json:"created_at"`
+	UpdatedAt   time.Time              `bson:"updated_at" json:"updated_at"`
 
 	// Soft-delete fields (managed by softdelete package)
 	Deleted   bool       `bson:"deleted,omitempty" json:"deleted,omitempty"`
@@ -74,14 +74,14 @@ type Team struct {
 
 // Agent is the canonical BSON shape for an agent document in the global.agents collection.
 type Agent struct {
-	AgentID     string    `bson:"agent_id" json:"agent_id"`
-	Name        string    `bson:"name" json:"name"`
-	DBName      string    `bson:"db_name" json:"db_name"`
-	ProfilePath string    `bson:"profile_path" json:"profile_path"`
-	Role        *string   `bson:"role,omitempty" json:"role,omitempty"`
+	AgentID     string      `bson:"agent_id" json:"agent_id"`
+	Name        string      `bson:"name" json:"name"`
+	DBName      string      `bson:"db_name" json:"db_name"`
+	ProfilePath string      `bson:"profile_path" json:"profile_path"`
+	Role        *string     `bson:"role,omitempty" json:"role,omitempty"`
 	Status      AgentStatus `bson:"status" json:"status"`
-	CreatedAt   time.Time `bson:"created_at" json:"created_at"`
-	UpdatedAt   time.Time `bson:"updated_at" json:"updated_at"`
+	CreatedAt   time.Time   `bson:"created_at" json:"created_at"`
+	UpdatedAt   time.Time   `bson:"updated_at" json:"updated_at"`
 
 	// Soft-delete fields (managed by softdelete package)
 	Deleted   bool       `bson:"deleted,omitempty" json:"deleted,omitempty"`
@@ -104,14 +104,14 @@ type Timeline struct {
 
 // Directive is the canonical BSON shape for a team directive.
 type Directive struct {
-	DirectiveID     string           `bson:"directive_id" json:"directive_id"`
-	TeamID          string           `bson:"team_id" json:"team_id"`
-	Statement       string           `bson:"statement" json:"statement"`
+	DirectiveID     string             `bson:"directive_id" json:"directive_id"`
+	TeamID          string             `bson:"team_id" json:"team_id"`
+	Statement       string             `bson:"statement" json:"statement"`
 	SuccessCriteria []SuccessCriterion `bson:"success_criteria" json:"success_criteria"`
-	Status          DirectiveStatus  `bson:"status" json:"status"`
-	Version         int              `bson:"version" json:"version"`
-	CreatedAt       time.Time        `bson:"created_at" json:"created_at"`
-	UpdatedAt       time.Time        `bson:"updated_at" json:"updated_at"`
+	Status          DirectiveStatus    `bson:"status" json:"status"`
+	Version         int                `bson:"version" json:"version"`
+	CreatedAt       time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt       time.Time          `bson:"updated_at" json:"updated_at"`
 
 	// Soft-delete fields (managed by softdelete package)
 	Deleted   bool       `bson:"deleted,omitempty" json:"deleted,omitempty"`
@@ -120,18 +120,18 @@ type Directive struct {
 
 // Initiative is the canonical BSON shape for a team initiative.
 type Initiative struct {
-	InitiativeID     string           `bson:"initiative_id" json:"initiative_id"`
-	DirectiveID      string           `bson:"directive_id" json:"directive_id"`
-	TeamID           string           `bson:"team_id" json:"team_id"`
-	Title            string           `bson:"title" json:"title"`
-	Description      string           `bson:"description" json:"description"`
-	SuccessCriteria  []SuccessCriterion `bson:"success_criteria" json:"success_criteria"`
-	Timeline         Timeline         `bson:"timeline" json:"timeline"`
-	PlanIDs          []string         `bson:"plan_ids" json:"plan_ids"`
-	Status           InitiativeStatus `bson:"status" json:"status"`
-	OutcomeNotes     string           `bson:"outcome_notes" json:"outcome_notes"`
-	CreatedAt        time.Time        `bson:"created_at" json:"created_at"`
-	UpdatedAt        time.Time        `bson:"updated_at" json:"updated_at"`
+	InitiativeID    string             `bson:"initiative_id" json:"initiative_id"`
+	DirectiveID     string             `bson:"directive_id" json:"directive_id"`
+	TeamID          string             `bson:"team_id" json:"team_id"`
+	Title           string             `bson:"title" json:"title"`
+	Description     string             `bson:"description" json:"description"`
+	SuccessCriteria []SuccessCriterion `bson:"success_criteria" json:"success_criteria"`
+	Timeline        Timeline           `bson:"timeline" json:"timeline"`
+	PlanIDs         []string           `bson:"plan_ids" json:"plan_ids"`
+	Status          InitiativeStatus   `bson:"status" json:"status"`
+	OutcomeNotes    string             `bson:"outcome_notes" json:"outcome_notes"`
+	CreatedAt       time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt       time.Time          `bson:"updated_at" json:"updated_at"`
 
 	// Soft-delete fields (managed by softdelete package)
 	Deleted   bool       `bson:"deleted,omitempty" json:"deleted,omitempty"`

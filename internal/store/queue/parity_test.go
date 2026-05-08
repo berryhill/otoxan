@@ -16,19 +16,19 @@ func TestQueueStore_Parity_GoWritePythonRead(t *testing.T) {
 
 	now := time.Now().UTC().Truncate(time.Millisecond)
 	task := &tasks.Task{
-		TaskID:       "q_parity_gwpr",
-		Title:        "Parity GWPR",
-		Description:  "Go writes, Python reads",
-		Status:       tasks.StatusQueued,
-		Type:         tasks.TypeInternal,
-		Priority:     2,
-		Assignee:     "silas",
-		AssigneeType: "agent",
-		MaxRetries:   3,
-		Labels:       []string{"parity"},
-		DependsOn:    []string{},
-		Artifacts:    []tasks.Artifact{},
-		RetryConfig:  tasks.DefaultRetryConfig(),
+		TaskID:         "q_parity_gwpr",
+		Title:          "Parity GWPR",
+		Description:    "Go writes, Python reads",
+		Status:         tasks.StatusQueued,
+		Type:           tasks.TypeInternal,
+		Priority:       2,
+		Assignee:       "silas",
+		AssigneeType:   "agent",
+		MaxRetries:     3,
+		Labels:         []string{"parity"},
+		DependsOn:      []string{},
+		Artifacts:      []tasks.Artifact{},
+		RetryConfig:    tasks.DefaultRetryConfig(),
 		FailurePattern: "notify_and_halt",
 		FailureContext: tasks.DefaultFailureContext(),
 		Intent:         "parity",
@@ -140,36 +140,5 @@ func TestQueueStore_Parity_SoftDelete(t *testing.T) {
 	}
 	if delVal, ok := pyDoc["deleted"]; ok && delVal == true {
 		t.Fatalf("expected deleted=false after restore, got %v", delVal)
-	}
-}
-
-func assertParityString(t *testing.T, doc map[string]interface{}, key, want string) {
-	t.Helper()
-	got, ok := doc[key].(string)
-	if !ok {
-		t.Fatalf("expected %s to be string, got %T (%v)", key, doc[key], doc[key])
-	}
-	if got != want {
-		t.Fatalf("%s mismatch: got %q, want %q", key, got, want)
-	}
-}
-
-func assertParityInt(t *testing.T, doc map[string]interface{}, key string, want int) {
-	t.Helper()
-	var got int
-	switch v := doc[key].(type) {
-	case int:
-		got = v
-	case int32:
-		got = int(v)
-	case int64:
-		got = int(v)
-	case float64:
-		got = int(v)
-	default:
-		t.Fatalf("expected %s to be numeric, got %T (%v)", key, doc[key], doc[key])
-	}
-	if got != want {
-		t.Fatalf("%s mismatch: got %d, want %d", key, got, want)
 	}
 }

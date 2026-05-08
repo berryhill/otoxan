@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/testcontainers/testcontainers-go/modules/mongodb"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -53,15 +52,3 @@ func newTestStore(t *testing.T, client *mongo.Client) *MemoryStore {
 }
 
 // makeMinimalMemory returns a memory with only required fields set.
-func makeMinimalMemory(id, agentID, content string) *Memory {
-	now := time.Now().UTC().Truncate(time.Millisecond)
-	return &Memory{
-		MemoryID:  id,
-		AgentID:   agentID,
-		Content:   content,
-		Type:      TypeObservation,
-		CreatedAt: now,
-		UpdatedAt: now,
-		Tags:      []string{},
-	}
-}

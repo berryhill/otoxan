@@ -41,8 +41,8 @@ type UpsertPointRequest struct {
 
 // Point represents a single vector point.
 type Point struct {
-	ID      string    `json:"id"`
-	Vector  []float32 `json:"vector"`
+	ID      string                 `json:"id"`
+	Vector  []float32              `json:"vector"`
 	Payload map[string]interface{} `json:"payload,omitempty"`
 }
 
@@ -55,9 +55,9 @@ func (c *Client) Upsert(ctx context.Context, collection string, points []Point) 
 
 // SearchRequest is the payload for points/search.
 type SearchRequest struct {
-	Vector []float32 `json:"vector"`
-	Limit  int       `json:"limit"`
-	WithPayload bool   `json:"with_payload"`
+	Vector      []float32 `json:"vector"`
+	Limit       int       `json:"limit"`
+	WithPayload bool      `json:"with_payload"`
 }
 
 // SearchResult is a single hit from a vector search.

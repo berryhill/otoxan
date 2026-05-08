@@ -59,11 +59,11 @@ func newTestStore(t *testing.T, client *mongo.Client) *ReportStore {
 func makeMinimalReport(id, title string) *Report {
 	now := time.Now().UTC().Truncate(time.Millisecond)
 	return &Report{
-		ReportID: id,
-		Title:    title,
-		Status:   StatusDraft,
-		Owner:    "silas",
-		Tags:     []string{},
+		ReportID:  id,
+		Title:     title,
+		Status:    StatusDraft,
+		Owner:     "silas",
+		Tags:      []string{},
 		CreatedAt: now,
 		UpdatedAt: now,
 	}

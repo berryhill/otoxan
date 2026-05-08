@@ -121,14 +121,3 @@ func TestMemoryStore_Parity_SoftDelete(t *testing.T) {
 		t.Fatalf("expected deleted=false after restore, got %v", delVal)
 	}
 }
-
-func assertParityString(t *testing.T, doc map[string]interface{}, key, want string) {
-	t.Helper()
-	got, ok := doc[key].(string)
-	if !ok {
-		t.Fatalf("expected %s to be string, got %T (%v)", key, doc[key], doc[key])
-	}
-	if got != want {
-		t.Fatalf("%s mismatch: got %q, want %q", key, got, want)
-	}
-}

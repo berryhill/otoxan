@@ -28,8 +28,8 @@ func NewSoftDelete(coll *mongo.Collection) *SoftDeleteCollection {
 // ------------------------------------------------------------------
 
 const (
-	softDeleteField    = "deleted"
-	softDeleteAtField  = "deleted_at"
+	softDeleteField   = "deleted"
+	softDeleteAtField = "deleted_at"
 )
 
 // addDeletedFilter returns a new filter that excludes soft-deleted documents

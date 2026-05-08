@@ -134,10 +134,10 @@ func (s *ReportStore) HardDelete(ctx context.Context, reportID string) (*mongo.D
 
 // ListOptions configures the List query.
 type ListOptions struct {
-	Status         []ReportStatus
-	Tag            string
-	Limit          int
-	IncludeDeleted bool
+	Status          []ReportStatus
+	Tag             string
+	Limit           int
+	IncludeDeleted  bool
 	IncludeArchived bool
 }
 

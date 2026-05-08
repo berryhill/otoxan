@@ -146,8 +146,8 @@ func (s *MemoryStore) HardDelete(ctx context.Context, memoryID string) (*mongo.D
 
 // MemoryHit is a single result from a vector search.
 type MemoryHit struct {
-	MemoryID string  `json:"memory_id"`
-	Score    float32 `json:"score"`
+	MemoryID string                 `json:"memory_id"`
+	Score    float32                `json:"score"`
 	Payload  map[string]interface{} `json:"payload,omitempty"`
 }
 

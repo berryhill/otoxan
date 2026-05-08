@@ -58,10 +58,10 @@ func newTestStore(t *testing.T, client *mongo.Client) *TeamStore {
 func makeMinimalTeam(id, name string) *Team {
 	now := time.Now().UTC().Truncate(time.Millisecond)
 	return &Team{
-		TeamID: id,
-		Name:   name,
-		Status: StatusForming,
-		DBName: fmt.Sprintf("team_%s", id),
+		TeamID:    id,
+		Name:      name,
+		Status:    StatusForming,
+		DBName:    fmt.Sprintf("team_%s", id),
 		Members:   []Member{},
 		Artifacts: map[string]interface{}{},
 		CreatedAt: now,

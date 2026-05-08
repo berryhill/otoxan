@@ -20,19 +20,19 @@ func TestTaskStore_Parity_GoWritePythonRead(t *testing.T) {
 
 	now := time.Now().UTC().Truncate(time.Millisecond)
 	task := &Task{
-		TaskID:       "t_parity_gwpr",
-		Title:        "Parity GWPR",
-		Description:  "Go writes, Python reads",
-		Status:       StatusQueued,
-		Type:         TypeInternal,
-		Priority:     2,
-		Assignee:     "silas",
-		AssigneeType: "agent",
-		MaxRetries:   3,
-		Labels:       []string{"parity"},
-		DependsOn:    []string{},
-		Artifacts:    []Artifact{},
-		RetryConfig:  DefaultRetryConfig(),
+		TaskID:         "t_parity_gwpr",
+		Title:          "Parity GWPR",
+		Description:    "Go writes, Python reads",
+		Status:         StatusQueued,
+		Type:           TypeInternal,
+		Priority:       2,
+		Assignee:       "silas",
+		AssigneeType:   "agent",
+		MaxRetries:     3,
+		Labels:         []string{"parity"},
+		DependsOn:      []string{},
+		Artifacts:      []Artifact{},
+		RetryConfig:    DefaultRetryConfig(),
 		FailurePattern: "notify_and_halt",
 		FailureContext: DefaultFailureContext(),
 		Intent:         "parity",
@@ -218,16 +218,5 @@ func assertParityInt(t *testing.T, doc bson.M, key string, want int) {
 	}
 	if got != want {
 		t.Fatalf("%s mismatch: got %d, want %d", key, got, want)
-	}
-}
-
-func assertParityBool(t *testing.T, doc bson.M, key string, want bool) {
-	t.Helper()
-	got, ok := doc[key].(bool)
-	if !ok {
-		t.Fatalf("expected %s to be bool, got %T (%v)", key, doc[key], doc[key])
-	}
-	if got != want {
-		t.Fatalf("%s mismatch: got %v, want %v", key, got, want)
 	}
 }

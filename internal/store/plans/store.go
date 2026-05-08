@@ -126,10 +126,10 @@ func (s *PlanStore) HardDelete(ctx context.Context, planID string) (*mongo.Delet
 
 // ListOptions configures the List query.
 type ListOptions struct {
-	Status         []PlanStatus
-	Tag            string
-	Limit          int
-	IncludeDeleted bool
+	Status          []PlanStatus
+	Tag             string
+	Limit           int
+	IncludeDeleted  bool
 	IncludeArchived bool
 }
 

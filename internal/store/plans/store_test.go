@@ -154,9 +154,9 @@ func TestPlanStore_Update(t *testing.T) {
 	}
 
 	ures, err := store.Update(ctx, "plan_upd", bson.M{
-		"status":      StatusExecuting,
-		"content":     "Updated content",
-		"tags":        []string{"urgent"},
+		"status":  StatusExecuting,
+		"content": "Updated content",
+		"tags":    []string{"urgent"},
 	})
 	if err != nil {
 		t.Fatalf("Update failed: %v", err)

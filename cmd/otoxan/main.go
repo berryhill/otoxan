@@ -56,6 +56,7 @@ flows, memory, dispatch, workers, and MCP servers.`,
 		newMCPCmd(),
 		newServeCmd(),
 		newVersionCmd(),
+		newCompanionCmd(),
 	)
 
 	return cmd

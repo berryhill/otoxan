@@ -45,6 +45,7 @@ func buildBinaries(t *testing.T) string {
 		"otoxan-mcp-knowledge",
 		"otoxan-mcp-flows",
 		"otoxan-mcp-plans",
+		"otoxan-mcp-identity",
 	}
 
 	for _, name := range bins {

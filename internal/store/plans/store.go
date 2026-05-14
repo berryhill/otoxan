@@ -4,6 +4,9 @@ package plans
 
 import (
 	"context"
+	"regexp"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/silas/otoxan/internal/softdelete"
@@ -133,6 +136,12 @@ type ListOptions struct {
 	IncludeArchived bool
 }
 
+// ListByStatus returns plans filtered by a single status, sorted by updated_at descending.
+// This is a convenience wrapper around List for the common single-status case.
+func (s *PlanStore) ListByStatus(ctx context.Context, status PlanStatus, limit int) ([]Plan, error) {
+	return s.List(ctx, ListOptions{Status: []PlanStatus{status}, Limit: limit})
+}
+
 // List returns plans matching the provided filters, sorted by updated_at descending.
 func (s *PlanStore) List(ctx context.Context, opts ListOptions) ([]Plan, error) {
 	filter := bson.M{}
@@ -193,6 +202,205 @@ func (s *PlanStore) Archive(ctx context.Context, planID string) (*mongo.UpdateRe
 func (s *PlanStore) Unarchive(ctx context.Context, planID string) (*mongo.UpdateResult, error) {
 	now := time.Now().UTC()
 	return s.sd.UpdateOne(ctx, bson.M{"plan_id": planID}, bson.M{"$set": bson.M{"archived_at": nil, "updated_at": now}})
+}
+
+// ------------------------------------------------------------------
+// Task-queue helpers (stubs — full implementation needs task store)
+// ------------------------------------------------------------------
+
+// ExecutionStatus holds the ground-truth queue counts for a plan.
+type ExecutionStatus struct {
+	PlanID       string  `json:"plan_id"`
+	Total        int     `json:"total"`
+	Completed    int     `json:"completed"`
+	Failed       int     `json:"failed"`
+	Running      int     `json:"running"`
+	Queued       int     `json:"queued"`
+	Blocked      int     `json:"blocked"`
+	Skipped      int     `json:"skipped"`
+	Cancelled    int     `json:"cancelled"`
+	Pending      int     `json:"pending"`
+	PercentDone  float64 `json:"percent_done"`
+	IsStuck      bool    `json:"is_stuck"`
+	StuckReason  string  `json:"stuck_reason,omitempty"`
+}
+
+// GetExecutionStatus returns execution status for a plan by querying the task
+// queue.  This is a stub; the real implementation needs a task-store reference.
+func (s *PlanStore) GetExecutionStatus(ctx context.Context, planID string) (*ExecutionStatus, error) {
+	// TODO: wire to task store once taskstore package is available
+	return &ExecutionStatus{PlanID: planID}, nil
+}
+
+// SyncProgress rewrites Markdown status badges and progress summary from queue
+// truth.  This is a stub; the real implementation needs a task-store reference.
+func (s *PlanStore) SyncProgress(ctx context.Context, planID string) (map[string]interface{}, error) {
+	// TODO: wire to task store once taskstore package is available
+	return map[string]interface{}{"synced": false, "plan_id": planID, "reason": "not implemented"}, nil
+}
+
+// StuckPlan is a plan enriched with stuck-reason fields.
+type StuckPlan struct {
+	Plan
+	StuckReason   string                 `json:"stuck_reason"`
+	QueueSummary  map[string]interface{} `json:"queue_summary"`
+	LastUpdated   time.Time              `json:"last_updated"`
+}
+
+// FindStuck finds plans that appear stuck in EXECUTING status.
+// This is a stub; the real implementation needs a task-store reference.
+func (s *PlanStore) FindStuck(ctx context.Context, staleDays int, limit int) ([]StuckPlan, error) {
+	// TODO: wire to task store once taskstore package is available
+	return nil, nil
+}
+
+// UndecomposedPlan is a plan that has zero tasks in the queue.
+type UndecomposedPlan struct {
+	Plan
+	TaskCount int `json:"task_count"`
+}
+
+// FindUndecomposed finds plans that have zero tasks in the queue (never decomposed).
+// This is a stub; the real implementation needs a task-store reference.
+func (s *PlanStore) FindUndecomposed(ctx context.Context, limit int) ([]UndecomposedPlan, error) {
+	// TODO: wire to task store once taskstore package is available
+	return nil, nil
+}
+
+// ExtractedTask holds structured task data parsed from Markdown content.
+type ExtractedTask struct {
+	ID             string   `json:"id"`
+	Title          string   `json:"title"`
+	Status         string   `json:"status"`
+	DependsOn      []string `json:"depends_on"`
+	Assigned       string   `json:"assigned,omitempty"`
+	Tool           string   `json:"tool,omitempty"`
+	Verify         string   `json:"verify,omitempty"`
+	ParentProvider string   `json:"parent_provider,omitempty"`
+}
+
+// ExtractTasks extracts structured task data from Markdown plan content.
+// Matches the Python planstore.extract_tasks static method.
+func ExtractTasks(content string) []ExtractedTask {
+	var tasks []ExtractedTask
+	// Split on task-heading boundaries, keeping the delimiter
+	parts := taskHeadingSplit(content)
+	for _, part := range parts {
+		m := taskHeadingMatch(part)
+		if m == nil {
+			continue
+		}
+		taskID := m[0]
+		title := strings.ReplaceAll(strings.TrimSpace(m[1]), "\n", " ")
+		endIdx, _ := strconv.Atoi(m[2])
+		body := part[endIdx:]
+
+		status := "PENDING"
+		if sm := statusRegex.FindStringSubmatch(body); sm != nil {
+			status = sm[1]
+		}
+
+		var dependsOn []string
+		if dm := dependsRegex.FindStringSubmatch(body); dm != nil {
+			depsStr := strings.TrimSpace(dm[1])
+			if depsStr != "(none)" {
+				dependsOn = splitAndTrim(depsStr, ",")
+			}
+		}
+
+		assigned := ""
+		if am := assignedRegex.FindStringSubmatch(body); am != nil {
+			assigned = strings.TrimSpace(am[1])
+		}
+
+		tool := ""
+		if tm := toolRegex.FindStringSubmatch(body); tm != nil {
+			tool = strings.TrimSpace(tm[1])
+		}
+
+		verify := ""
+		if vm := verifyRegex.FindStringSubmatch(body); vm != nil {
+			verify = strings.TrimSpace(vm[1])
+		}
+
+		parentProvider := ""
+		if pm := parentProviderRegex.FindStringSubmatch(body); pm != nil {
+			parentProvider = strings.TrimSpace(pm[1])
+		}
+
+		tasks = append(tasks, ExtractedTask{
+			ID:             taskID,
+			Title:          title,
+			Status:         status,
+			DependsOn:      dependsOn,
+			Assigned:       assigned,
+			Tool:           tool,
+			Verify:         verify,
+			ParentProvider: parentProvider,
+		})
+	}
+	return tasks
+}
+
+// ------------------------------------------------------------------
+// Regex helpers for ExtractTasks
+// ------------------------------------------------------------------
+
+var (
+	statusRegex         = regexp.MustCompile(`\*\*Status:\*\*\s*(PENDING|RUNNING|SUCCESS|FAILED|SKIPPED)`)
+	dependsRegex        = regexp.MustCompile(`\*\*Depends on:\*\*\s*(.+)`)
+	assignedRegex       = regexp.MustCompile(`\*\*Assigned:\*\*\s*(.+)`)
+	toolRegex           = regexp.MustCompile(`\*\*Tool:\*\*\s*(.+)`)
+	verifyRegex         = regexp.MustCompile(`\*\*Verify:\*\*\s*(.+)`)
+	parentProviderRegex = regexp.MustCompile(`\*\*Parent Provider:\*\*\s*(.+)`)
+	_taskHeadingRe      = regexp.MustCompile(`(?m)^###\s+(T\d+):\s+(.*?)\n`)
+)
+
+func taskHeadingSplit(content string) []string {
+	// Split on "### T<digits>:" boundaries, keeping the delimiter as part of each part.
+	// Go regexp does not support (?=...), so we find all indices and split manually.
+	re := regexp.MustCompile(`###\s+T\d+:\s`)
+	matches := re.FindAllStringIndex(content, -1)
+	if len(matches) == 0 {
+		if strings.TrimSpace(content) != "" {
+			return []string{content}
+		}
+		return nil
+	}
+	var out []string
+	for i, m := range matches {
+		start := m[0]
+		end := len(content)
+		if i+1 < len(matches) {
+			end = matches[i+1][0]
+		}
+		out = append(out, content[start:end])
+	}
+	return out
+}
+
+func taskHeadingMatch(part string) []string {
+	m := _taskHeadingRe.FindStringSubmatchIndex(part)
+	if m == nil {
+		return nil
+	}
+	// m[0],m[1] = full match; m[2],m[3] = group 1; m[4],m[5] = group 2
+	return []string{
+		part[m[2]:m[3]],      // taskID
+		part[m[4]:m[5]],      // title
+		strconv.Itoa(m[1]),   // end index of full match
+	}
+}
+
+func splitAndTrim(s, sep string) []string {
+	parts := strings.Split(s, sep)
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if t := strings.TrimSpace(p); t != "" {
+			out = append(out, t)
+		}
+	}
+	return out
 }
 
 // sortPlans sorts by updated_at descending.

@@ -1,0 +1,17 @@
+[Unit]
+Description=Otoxan Indexer for agent %i
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=%h/code/otoxan/otoxan/bin/otoxan-indexer --agent %i --poll-interval 60s
+Environment="OTOXAN_HOME=%h/.local/share/otoxan"
+Environment="OTOXAN_QDRANT_URL=http://localhost:6333"
+Environment="OTOXAN_EMBEDDING_PROVIDER=openai"
+EnvironmentFile=-%h/.config/otoxan/indexer.env
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

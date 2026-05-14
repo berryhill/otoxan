@@ -1,0 +1,61 @@
+# =============================================================================
+# Stage 1: Build
+# =============================================================================
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.25-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache git ca-certificates tzdata
+
+WORKDIR /src
+
+# Copy go mod/sum first for better layer caching
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source
+COPY . .
+
+# Build args for cross-compilation (multi-arch support)
+ARG TARGETOS
+ARG TARGETARCH
+ARG VERSION=dev
+ARG COMMIT=unknown
+ARG BUILDTIME=unknown
+
+# Build otoxan-indexer binary with version ldflags
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} \
+    go build -trimpath \
+    -ldflags "\
+      -X github.com/silas/otoxan/internal/version.Version=${VERSION} \
+      -X github.com/silas/otoxan/internal/version.Commit=${COMMIT} \
+      -X github.com/silas/otoxan/internal/version.BuildTime=${BUILDTIME}" \
+    -o /otoxan-indexer \
+    ./cmd/otoxan-indexer/
+
+# =============================================================================
+# Stage 2: Runtime
+# =============================================================================
+FROM docker.io/library/alpine:3.21 AS runtime
+
+# Install runtime dependencies
+RUN apk add --no-cache ca-certificates tzdata
+
+# Create non-root user for security
+RUN addgroup -g 1000 indexer && \
+    adduser -u 1000 -G indexer -s /bin/sh -D indexer
+
+WORKDIR /app
+
+# Copy binary from builder
+COPY --from=builder /otoxan-indexer /app/otoxan-indexer
+
+# Copy config dir skeleton (can be volume-mounted at runtime)
+RUN mkdir -p /etc/otoxan /home/indexer/.otoxan/run && \
+    chown -R indexer:indexer /app /home/indexer/.otoxan
+
+USER indexer:indexer
+
+# Expose the standard otoxan home path
+ENV OTOXAN_HOME=/home/indexer/.otoxan
+
+ENTRYPOINT ["/app/otoxan-indexer"]

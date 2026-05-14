@@ -164,7 +164,7 @@ func (s *Server) dispatch(ctx context.Context, req Request) Response {
 			}
 			return resp
 		}
-		resp.Result = map[string]any{"content": []map[string]string{{"type": "text", "text": fmt.Sprintf("%v", result)}}}
+		resp.Result = map[string]any{"content": []map[string]string{{"type": "text", "text": mustMarshal(result)}}}
 	default:
 		resp.Error = &RPCError{Code: CodeMethodNotFound, Message: "method not found: " + req.Method}
 	}
@@ -184,6 +184,15 @@ func callWithRecover(ctx context.Context, handler func(context.Context, json.Raw
 func mustJSON(v any) []byte {
 	b, _ := json.Marshal(v)
 	return b
+}
+
+// mustMarshal returns the JSON encoding of v. It panics on error.
+func mustMarshal(v any) string {
+	b, err := json.Marshal(v)
+	if err != nil {
+		panic("mustMarshal: " + err.Error())
+	}
+	return string(b)
 }
 
 // ReadFramed reads an LSP-style framed message from an io.Reader.

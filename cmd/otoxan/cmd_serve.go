@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	versionpkg "github.com/silas/otoxan/internal/version"
 	"github.com/spf13/cobra"
 )
 
@@ -25,7 +26,7 @@ func newServeCmd() *cobra.Command {
 			})
 			mux.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				_, _ = fmt.Fprintf(w, `{"version":"%s"}`, version)
+				_, _ = fmt.Fprintf(w, `{"version":"%s"}`, versionpkg.Short())
 			})
 
 			srv := &http.Server{Addr: addr, Handler: mux}

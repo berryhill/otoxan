@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -30,6 +31,32 @@ func (c *Client) SetHTTPClient(hc *http.Client) {
 	c.http = hc
 }
 
+// IsTransientError reports whether an error from the Qdrant client is likely
+// to resolve on retry (network blip, 429 rate-limit, 5xx server error).
+func IsTransientError(err error) bool {
+	if err == nil {
+		return false
+	}
+	s := err.Error()
+	// Network-level failures
+	if strings.Contains(s, "connection refused") ||
+		strings.Contains(s, "no such host") ||
+		strings.Contains(s, "i/o timeout") ||
+		strings.Contains(s, "Temporary failure in name resolution") ||
+		strings.Contains(s, "context deadline exceeded") {
+		return true
+	}
+	// HTTP 429 or 5xx from Qdrant
+	if strings.Contains(s, "qdrant 429") ||
+		strings.Contains(s, "qdrant 5") ||
+		strings.Contains(s, "qdrant 503") ||
+		strings.Contains(s, "qdrant 502") ||
+		strings.Contains(s, "qdrant 504") {
+		return true
+	}
+	return false
+}
+
 // ------------------------------------------------------------------
 // Points / vectors
 // ------------------------------------------------------------------
@@ -41,7 +68,7 @@ type UpsertPointRequest struct {
 
 // Point represents a single vector point.
 type Point struct {
-	ID      string                 `json:"id"`
+	ID      interface{}            `json:"id"`
 	Vector  []float32              `json:"vector"`
 	Payload map[string]interface{} `json:"payload,omitempty"`
 }
@@ -62,7 +89,7 @@ type SearchRequest struct {
 
 // SearchResult is a single hit from a vector search.
 type SearchResult struct {
-	ID      string                 `json:"id"`
+	ID      interface{}            `json:"id"`
 	Score   float32                `json:"score"`
 	Payload map[string]interface{} `json:"payload,omitempty"`
 }
@@ -182,6 +209,9 @@ func (c *Client) put(ctx context.Context, url string, body interface{}) error {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusConflict {
+		return nil // collection already exists
+	}
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("qdrant %s", resp.Status)
 	}

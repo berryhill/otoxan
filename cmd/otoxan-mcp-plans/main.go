@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 
@@ -17,6 +18,9 @@ import (
 const version = "0.1.0-dev"
 
 func main() {
+	healthCheck := flag.Bool("health-check", false, "Run health check (connect to Mongo and exit)")
+	flag.Parse()
+
 	ctx := context.Background()
 
 	uri := os.Getenv("MONGO_URI")
@@ -34,6 +38,15 @@ func main() {
 		os.Exit(1)
 	}
 	defer func() { _ = client.Disconnect(ctx) }()
+
+	// Health check mode: ping Mongo and exit
+	if *healthCheck {
+		if err := client.Ping(ctx, nil); err != nil {
+			fmt.Fprintf(os.Stderr, "health-check ping: %v\n", err)
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}
 
 	planStore := plans.NewPlanStore(client.Database(dbName).Collection("plans"))
 

@@ -1,0 +1,25 @@
+[Unit]
+Description=Xander — otoxan admin daemon
+After=network.target
+Documentation=https://github.com/silas/otoxan/blob/main/docs/xander.md
+
+# xander.sock lives at ~/.otoxan/run/ — make sure the directory exists
+RequiresMountsFor=%h/.otoxan/run
+
+[Service]
+Type=simple
+ExecStart=%h/code/otoxan/otoxan/bin/xander serve
+WorkingDirectory=%h/.otoxan/run
+Restart=on-failure
+RestartSec=5
+
+# Logging — journalctl --user -u xander shows everything
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=xander
+
+# Graceful shutdown: xander serve handles SIGTERM and drains connections
+TimeoutStopSec=30
+
+[Install]
+WantedBy=default.target

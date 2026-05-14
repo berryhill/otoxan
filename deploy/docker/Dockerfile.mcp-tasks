@@ -1,0 +1,68 @@
+# =============================================================================
+# Stage 1: Build
+# =============================================================================
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.25-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache git ca-certificates tzdata
+
+WORKDIR /src
+
+# Copy go mod/sum first for better layer caching
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source
+COPY . .
+
+# Build args for cross-compilation (multi-arch support)
+ARG TARGETOS
+ARG TARGETARCH
+ARG VERSION=dev
+ARG COMMIT=unknown
+ARG BUILDTIME=unknown
+
+# Build otoxan-mcp-tasks binary with version ldflags
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} \
+    go build -trimpath \
+    -ldflags "\
+      -X github.com/silas/otoxan/internal/version.Version=${VERSION} \
+      -X github.com/silas/otoxan/internal/version.Commit=${COMMIT} \
+      -X github.com/silas/otoxan/internal/version.BuildTime=${BUILDTIME}" \
+    -o /otoxan-mcp-tasks \
+    ./cmd/otoxan-mcp-tasks/
+
+# =============================================================================
+# Stage 2: Runtime
+# =============================================================================
+FROM docker.io/library/alpine:3.21 AS runtime
+
+# Install runtime dependencies
+RUN apk add --no-cache ca-certificates tzdata
+
+# Create non-root user for security
+RUN addgroup -g 1000 mcp-tasks && \
+    adduser -u 1000 -G mcp-tasks -s /bin/sh -D mcp-tasks
+
+WORKDIR /app
+
+# Copy binary from builder
+COPY --from=builder /otoxan-mcp-tasks /app/otoxan-mcp-tasks
+
+# Copy health check wrapper script
+COPY --from=builder /src/deploy/docker/healthcheck-mcp.sh /usr/local/bin/healthcheck
+
+# Copy config dir skeleton (can be volume-mounted at runtime)
+RUN mkdir -p /etc/otoxan /home/mcp-tasks/.otoxan/run && \
+    chown -R mcp-tasks:mcp-tasks /app /home/mcp-tasks/.otoxan
+
+USER mcp-tasks:mcp-tasks
+
+# Expose the standard otoxan home path
+ENV OTOXAN_HOME=/home/mcp-tasks/.otoxan
+
+# Health check: run a quick initialization test against Mongo
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD /usr/local/bin/healthcheck /app/otoxan-mcp-tasks || exit 1
+
+ENTRYPOINT ["/app/otoxan-mcp-tasks"]

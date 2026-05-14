@@ -13,6 +13,7 @@ mkdir -p "${SYSTEMD_USER_DIR}"
 
 echo "Installing systemd user units..."
 cp "${SCRIPT_DIR}"/systemd/otoxan-mcp-*.service "${SYSTEMD_USER_DIR}/"
+cp "${SCRIPT_DIR}"/systemd/otoxan-indexer@.service "${SYSTEMD_USER_DIR}/"
 
 echo "Reloading systemd daemon..."
 systemctl --user daemon-reload
@@ -24,3 +25,9 @@ done
 
 echo "Done. Checking status..."
 systemctl --user is-active otoxan-mcp-tasks otoxan-mcp-plans otoxan-mcp-flows otoxan-mcp-memory otoxan-mcp-knowledge || true
+
+echo ""
+echo "Indexer template installed as otoxan-indexer@.service."
+echo "Enable per-agent instances with:"
+echo "  systemctl --user enable --now otoxan-indexer@<agent-id>"
+echo "Example: systemctl --user enable --now otoxan-indexer@xander"

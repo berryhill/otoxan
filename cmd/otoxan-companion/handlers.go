@@ -344,7 +344,7 @@ func runNativeHostLoopWithCtx(ctx *handlerCtx, in io.Reader, out io.Writer) erro
 			}
 			_ = writeMessage(sw, message{
 				Type: "error",
-				Data: mustMarshal(errorData{Error: err.Error()}),
+				Data: mustMarshal(map[string]any{"error": err.Error()}),
 			})
 			return err
 		}
@@ -356,7 +356,7 @@ func runNativeHostLoopWithCtx(ctx *handlerCtx, in io.Reader, out io.Writer) erro
 		if err != nil {
 			reply = message{
 				Type: "error",
-				Data: mustMarshal(errorData{Error: err.Error()}),
+				Data: mustMarshal(map[string]any{"error": err.Error()}),
 			}
 		}
 
@@ -364,4 +364,25 @@ func runNativeHostLoopWithCtx(ctx *handlerCtx, in io.Reader, out io.Writer) erro
 			return err
 		}
 	}
+}
+
+// mustMarshal panics if json.Marshal fails; safe for static / test data only.
+func mustMarshal(v any) []byte {
+	b, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
+// welcomeData is the payload for a "welcome" reply.
+type welcomeData struct {
+	Version    string `json:"version"`
+	GoVersion  string `json:"go_version"`
+	DaemonName string `json:"daemon_name"`
+}
+
+// errorData is the payload for an error reply in the native host loop.
+type errorData struct {
+	Error string `json:"error"`
 }

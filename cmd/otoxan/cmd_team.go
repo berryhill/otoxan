@@ -39,7 +39,7 @@ func newTeamListCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			result, err := store.List(ctx, teams.ListOptions{Limit: limit})
+			result, err := store.List(ctx, teams.TeamListOptions{Limit: limit})
 			if err != nil {
 				return err
 			}

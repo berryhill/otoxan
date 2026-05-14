@@ -140,6 +140,10 @@ func overlayEnv(cfg *Config) error {
 			cfg.Infisical.ProjectID = val
 		case "OTOXAN_INFISICAL_ENV":
 			cfg.Infisical.Env = val
+		case "OTOXAN_INFISICAL_CLIENT_ID":
+			// No config field yet; reserved for future use.
+		case "OTOXAN_INFISICAL_CLIENT_SECRET":
+			// No config field yet; reserved for future use.
 		case "OTOXAN_STRICT_MODE":
 			cfg.StrictMode = val == "true" || val == "1"
 		default:

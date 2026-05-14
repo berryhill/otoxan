@@ -1,0 +1,16 @@
+[Unit]
+Description=Otoxan MCP Identity Server
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=%h/code/otoxan/otoxan/deploy/mcp-stdio-wrapper.sh %h/code/otoxan/otoxan/testbin/otoxan-mcp-identity
+Environment="INFISICAL_TOKEN=%h/.co...ken"
+Environment="MONGO_URI=mongodb://localhost:27017/otoxan"
+Environment="MONGO_DB=otoxan_global"
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

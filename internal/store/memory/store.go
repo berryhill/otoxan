@@ -163,8 +163,9 @@ func (s *MemoryStore) Search(ctx context.Context, query []float32, k int) ([]*Me
 	}
 	hits := make([]*MemoryHit, 0, len(results))
 	for _, r := range results {
+		idStr, _ := r.ID.(string)
 		hits = append(hits, &MemoryHit{
-			MemoryID: extractMemoryID(r.ID),
+			MemoryID: extractMemoryID(idStr),
 			Score:    r.Score,
 			Payload:  r.Payload,
 		})
